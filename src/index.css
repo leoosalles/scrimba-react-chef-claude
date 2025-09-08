@@ -1,0 +1,92 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+    background-color: #FAFAF8;
+}
+
+div.container {
+    width: 90%;
+    min-width: 320px;
+    max-width: 720px;
+    margin: 4em auto;
+}
+
+.header-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 11px;
+    height: 80px;
+    margin-bottom: 1.75em;
+    background-color: #fff;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .10), 0 1px 2px 0 rgba(0, 0, 0, .06);
+}
+
+header > img {
+    height: 50px;
+}
+
+header .logo-title {
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 60px;
+    letter-spacing: 1.6px;
+}
+
+div.input-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    font-size: .5rem;
+}
+
+legend.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+input.input-field {
+    flex-grow: 1;
+    max-width: 400px;
+    padding-left: 13px;
+    border: 1px solid #D1D5DB;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+input,
+button {
+    padding-top: .5em;
+    padding-bottom: .5em;
+    border-radius: 6px;
+    line-height: 20px;
+
+}
+
+button.search {
+    flex-grow: 1;
+    max-width: 185px;
+    font-family: inherit;
+    font-size: .75rem;
+    font-weight: 500;
+    background-color: #141413;
+    color: #FAFAF8;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+button.search::before {
+    content: "+";
+    margin-right: 5px;
+}
