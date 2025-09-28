@@ -17,9 +17,7 @@ app.use((req, res, next) => {
 const hf = new HfInference(process.env.HF_API_KEY);
 
 const SYSTEM_PROMPT = `
-You are an assistant that receives a list of ingredients that a user has and suggests a recipe they could make with some or all of those ingredients.
-You don't need to use every ingredient they mention in your recipe. The recipe can include additional ingredients, but try not to include too many extras.
-Format your response in markdown to make it easier to render on a web page.
+You are an assistant that receives a list of ingredients that a user has and suggests a recipe they could make with some or all of those ingredients. You don't need to use every ingredient they mention in your recipe. The recipe can include additional ingredients, but try not to include too many extras. Format your response in markdown to make it easier to render on a web page.
 `;
 
 app.post("/api", async (req, res) => {

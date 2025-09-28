@@ -77,7 +77,7 @@ function Main() {
         />
       )}
 
-      {loading && <p>Loading recipe...</p>}
+      {loading && <p className="loading">Loading recipe...</p>}
 
       {recipeShown && <ClaudeRecipe recipe={recipeText} />}
     </main>
