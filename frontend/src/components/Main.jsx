@@ -13,7 +13,8 @@ function Main() {
     const newIngredient = formData.get('ingredient');
 
     if (newIngredient) {
-      setIngredients(prevIngredients => [...prevIngredients, newIngredient]);
+      setIngredients(prevIngredients => 
+        [...prevIngredients, newIngredient]);
     }
   };
 
@@ -47,12 +48,7 @@ function Main() {
       <section className="form-container">
         <form
           className="add-ingredient-form"
-          onSubmit={e => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            addIngredient(formData);
-            e.target.reset();
-          }}
+          action={addIngredient}
         >
           <fieldset>
             <legend className="sr-only">Form to add ingredients for AI-generated recipes</legend>
