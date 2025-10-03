@@ -203,7 +203,7 @@ app.use((req, res, next) => {
 const hf = new HfInference(process.env.HF_API_KEY);
 ```
 
-**Purpose:** Instantiate the Hugging Face Inference client using the API key stored in environment variables.
+**Purpose:** Instantiates the Hugging Face Inference client using the API key stored in environment variables.
 
 **Benefit:** Establishes a secure and authenticated connection to Hugging Face's hosted models, enabling the backend to send prompts and receive AI-generated recipe suggestions.
 
@@ -215,7 +215,7 @@ You are an assistant that receives a list of ingredients...
 `;
 ```
 
-**Purpose:** Define the behavior of the AI assistant.
+**Purpose:** Defines the behavior of the AI assistant.
 
 **Benefit:** Ensures consistent and relevant responses from the model.
 
@@ -225,7 +225,7 @@ You are an assistant that receives a list of ingredients...
 app.post("/api", async (req, res) => { ... });
 ```
 
-**Purpose:** Define the `/api` POST route that handles incoming requests from the frontend containing ingredient data.
+**Purpose:** Defines the `/api` POST route that handles incoming requests from the frontend containing ingredient data.
 
 **Benefit:** Establishes a dedicated endpoint where the React application can submit prompts and receive AI-generated recipe suggestions, enabling dynamic interaction between user input and the Mixtral model.
 
@@ -235,3 +235,88 @@ app.post("/api", async (req, res) => { ... });
 const { prompt } = req.body;
 ```
 
+**Purpose:** Extracts the `prompt` property from the incoming JSON payload sent in the HTTP request body.
+
+**Benefit:** Captures the user's input, specifically the list of ingredients or culinary context, submitted via the frontend, making it available for processing by the backend.
+
+**Explanation:** When a user enters ingredients and clicks the button to generate a recipe, the React frontend sends a POST request to the `/api` endpoint with JSON object containing a `prompt` field. This line uses object destructuring to isolate that field from `req.body`, allowing the backend to pass it directly to Hugging Face's Mixtral model. The `prompt` serves as the core input for the AI, guiding it to generate a personalized recipe recommendation based on the user's ingredients.<br><br>
+
+```js
+if (!prompt || typeof prompt !== "string") {
+  return res.status(400).json({ error: "prompt (string) is required" });
+}
+```
+
+**Purpose:** Validates the structure and type of the incoming `prompt` to ensure it is a non-empty string before proceeding with AI inference.
+
+**Benefit:** Prevents malformed or missing data from being sent to Hugging Face's Mixtral model, avoiding unnecessary API calls, potencial errors, and wasted compute resources.
+
+**Explanation:** This conditional check acts as a safeguard against invalid requests. The frontend is expected to send a JSON payload with a `prompt` field containing a string built from the user's ingredient list. This validation ensures that the `prompt` exists and is of the correct type (`string`). If the check fails, due to a missing field, null value, or incorrect type, the server immediately responds with a `400 Bad Request` status and a descriptive error message. This early rejection improves robustness, helps me catch issues during integration, and ensures that only well-formed prompts reach the AI model for recipe generation.<br><br>
+
+```js
+const response = await hf.chatCompletion({
+  model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  messages: [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: prompt },
+  ],
+  max_tokens: 1024,
+});
+```
+
+**Purpose:** Sends a structured prompt, composed of a system directive and user input, to Hugging Face's Mixtral model using the `chatCompletion` method.
+
+**Benefit:** Harnesses the capabilities of a cutting-edge large language model (LLM) to generate rich, coherent, and context-aware recipe suggestions based on the ingredients provided by the user.
+
+**Explanation:** This line initiates the core AI interaction. The `chatCompletion` method mimics a conversational exchange, where the `system` message sets the behavior and tone of the model (e.g., "You are a helpful chef"), and the `user` message contains the actual ingredient prompt submitted via the frontend. The model used (`mistralai/Mixtral-8x7B-Instruct-v0.1`) is optimized for instruction-following tasks, making it ideal for generating recipes. The `max_tokens` parameter limits the length of the response to ensure concise output. Once the model processes the input, it returns a completion object containing the generated recipe, which is then sent back to the frontend for display.<br><br>
+
+```js
+const text =
+  response?.choices?.[0]?.message?.content ??
+  response?.generated_text ??
+  JSON.stringify(response);
+```
+
+**Purpose:** Extracts the AI-generated recipe text from the Hugging Face response object, accounting for variations in response structure.
+
+**Benefit:** Ensures robust and fault-tolerant parsing of the model's output, regardless of whether the response follows the chat-style-format (`choices.[0].message.content`) or a simpler text-based format (`generated_text`).
+
+**Explanation:** This line is responsible for retrieving the actual recipe generated by the Mixtral model. Hugging Face's API may return different response shapes depending on the model or endpoint used. To handle this gracefully, the code uses optional chaining (`?.`) to safely access nested properties without throwing errors if any part is undefined. It also uses the nullish coalescing operator (`??`) to fall back to alternative formats: first checking for `choices[0].message.content`, then `generated_text`, and finally converting the entire response to a string as a last resort. This approach guarantees that the backend always returns a usable string to the frontend, even if the model's output format changes or is unexpectedly structured.<br><br>
+
+```js
+res.json({ text });
+```
+
+**Purpose:** Sends the AI-generated recipe back to the frontend as a JSON response.
+
+**Benefit:** Makes the model's output accessible to the React application, allowing it to render the recipe dynamically in the user interface.
+
+**Explanation:** This line finalizes the `/api` route by returning the processed result from Hugging Face's Mixtral model. The `text` variable contains the recipe generated based on the user's ingredients. By wrapping it in a JSON object and sending it via `res.json()`, the server ensures that the frontend receives a structured response it can easily parse and display. This step completes the request-response cycle, transforming user input into a personalized recipe powered by AI.<br><br>
+
+```js
+} catch (err) {
+  console.error("Error in /api route:", err);
+  res.status(500).json({ error: err.message ?? "Internal server error" });
+}
+```
+
+**Purpose:** Handles unexpected runtime errors that may occur during the execution of the `/api` route, ensuring the server remains stable and responsive.
+
+**Benefit:** Prevents the backend from crashing due to unhandled exceptions and provides the frontend with a clear, structured error response, improving resilience and user experience.
+
+**Explanation:** This `catch` block wraps the asychronous logic that sends prompts to Hugging Face and processes the model's response. If any part of that process fails, due to network issues, invalid API keys, malformed responses, or internal bugs, the error is caught here. The `console.error()` logs the full error details to the server console for debugging purposes, while `res.status(500).json(...)` sends a simplified error message to the client.<br><br>
+
+```js
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
+```
+
+**Purpose:** Defines a port for the Express server and starts listening for incoming HTTP requests.
+
+**Benefit:** Enables the backend to operate both in local development and in production environments (e.g., on platforms like Vercel, Render, or Railway) by dynamically selecting the appropriate port.
+
+**Explanation:** This snippet ensures that the server is accessible and ready to handle requests from the frontend. It first checks if a `PORT` variable is defined in the environment, typically injected by the hosting provider during deployment. If not, it defaults to port `3000`, which is standard for local development. Once the server starts, it logs a message to the console with the full local URL, helping me to confirm that the backend is running and reachable. This setup is essential for completing the frontend-backend communication loop, allowing users to submit ingredients and receive AI-generated recipes.<br><br>
+
+---
