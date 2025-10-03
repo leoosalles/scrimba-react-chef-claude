@@ -69,36 +69,6 @@ This project was developed as a required activity for the **Learn React** module
   ┣ 📄 .gitignore
   ┗ 📄 .env
 ```
----
-
-## 🧱 HTML Structure (index.html)
-
-- Root container `<div id="root"></div>` for mounting the React application
-- React entry script `<script type="module" src="./src/index.jsx"></script>`
-- Entire page structure (header, forms, recipe display) created via React components (Header, IngredientsList, ClaudeRecipe, Main)
-- Component-based layout ensures reusability and modular design
-- Responsive and semantic content rendered dynamically through JSX
-- Recipes, ingredients, and user interactions managed via props and centralized state<br><br>
-
-```html
-<div id="root"></div>
-```
-
-**Purpose:** Serves as the root container where the React application will be mounted.
-
-**Benefit:** Provides a single, central DOM node for React to manage, enabling dynamic rendering and component-based updates.
-
-**Explanation:** React's `createRoot` method targets this element to inject the entire application, allowing React to handle all UI changes efficiently without manipulating the DOM manually.<br><br>
-
-```html
-<script type="module" src="./src/index.jsx"></script>
-```
-
-**Purpose:** Loads the main React entry point as an ES module.
-
-**Benefit:** Ensures modern JavaScript features (import/export) are supported, keeping the code modular and maintainable.
-
-**Explanation:** This script initializes the React app by importing the `App` component and rendering it inside the `#root` element with `createRoot`, establishing the starting point of the application.<br><br>
 
 ---
 
@@ -319,4 +289,58 @@ app.listen(PORT, () => {
 
 **Explanation:** This snippet ensures that the server is accessible and ready to handle requests from the frontend. It first checks if a `PORT` variable is defined in the environment, typically injected by the hosting provider during deployment. If not, it defaults to port `3000`, which is standard for local development. Once the server starts, it logs a message to the console with the full local URL, helping me to confirm that the backend is running and reachable. This setup is essential for completing the frontend-backend communication loop, allowing users to submit ingredients and receive AI-generated recipes.<br><br>
 
+### `.gitignore` file
+
+```gitignore
+node_modules/
+```
+
+**Purpose:** Excludes the `node_modules` directory from version control.
+
+**Benefit:** Prevents unnecessary files (thousands of dependencies installed via npm) from being tracked in Git, reducing repository size and avoiding conflicts.
+
+**Explanation:** `node_modules` contains third-party packages that can be installed anytime using `npm install`. Since they are reproducible from `package.json` and `package-lock.json`, they should never be committed.<br><br>
+
+```gitignore
+.env
+```
+
+**Purpose:** Excludes the `.env` file that stores environment variables (e.g., API keys, database credentials, and configuration values).
+
+**Benefit:** Protects sensitive information from being exposed publicly in the repository and avoids environment-specific settings being shared across developers.
+
+**Explanation:** Each developer or deployment environment can create their own `.env` file locally, ensuring security and flexibility without affecting others.<br><br>
+
 ---
+
+## 🖥️ Frontend
+
+### 🧱 HTML Structure (index.html)
+
+- Root container `<div id="root"></div>` for mounting the React application
+- React entry script `<script type="module" src="./src/index.jsx"></script>`
+- Entire page structure (header, forms, recipe display) created via React components (Header, IngredientsList, ClaudeRecipe, Main)
+- Component-based layout ensures reusability and modular design
+- Responsive and semantic content rendered dynamically through JSX
+- Recipes, ingredients, and user interactions managed via props and centralized state<br><br>
+
+```html
+<div id="root"></div>
+```
+
+**Purpose:** Serves as the root container where the React application will be mounted.
+
+**Benefit:** Provides a single, central DOM node for React to manage, enabling dynamic rendering and component-based updates.
+
+**Explanation:** React's `createRoot` method targets this element to inject the entire application, allowing React to handle all UI changes efficiently without manipulating the DOM manually.<br><br>
+
+```html
+<script type="module" src="./src/index.jsx"></script>
+```
+
+**Purpose:** Loads the main React entry point as an ES module.
+
+**Benefit:** Ensures modern JavaScript features (import/export) are supported, keeping the code modular and maintainable.
+
+**Explanation:** This script initializes the React app by importing the `App` component and rendering it inside the `#root` element with `createRoot`, establishing the starting point of the application.<br><br>
+
