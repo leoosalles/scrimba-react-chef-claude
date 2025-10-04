@@ -315,7 +315,9 @@ node_modules/
 
 ## 🖥️ Frontend
 
-### 🧱 HTML Structure (index.html)
+### 🧱 HTML Structure
+
+#### `index.html` file
 
 - Root container `<div id="root"></div>` for mounting the React application
 - React entry script `<script type="module" src="./src/index.jsx"></script>`
@@ -343,4 +345,250 @@ node_modules/
 **Benefit:** Ensures modern JavaScript features (import/export) are supported, keeping the code modular and maintainable.
 
 **Explanation:** This script initializes the React app by importing the `App` component and rendering it inside the `#root` element with `createRoot`, establishing the starting point of the application.<br><br>
+
+---
+
+### ⚛️ React Component Code Explanation
+
+#### `index.jsx` file
+
+```jsx
+import { createRoot } from "react-dom/client";
+```
+
+**Purpose:** Imports the `createRoot` function from React's new rendering API.
+
+**Benefit:** Provides an optimized way to attach React components to the DOM, replacing the older `ReactDOM.render` method.
+
+**Explanation:** `createRoot` initializes a React "root" where the component tree will be rendered, enabling concurrent features and better performance in modern React apps.<br><br>
+
+```jsx
+import App from "./App.jsx";
+```
+
+**Purpose:** Imports the main application component.
+
+**Benefit:** Centralizes the app's logic and UI into a reusable component that serves as the entry point.
+
+**Explanation:** The `App` component acts as the top-level container, managing child components and routing if present.<br><br>
+
+```jsx
+const root = createRoot(document.querySelector('#root'));
+```
+
+**Purpose:** Creates a React root and link it to the `#root` element in the HTML.
+
+**Benefit:** Connects React's virtual DOM to the actual DOM element, enabling React to control updates efficiently.
+
+**Explanation:** `document.querySelector('root')` selects the `<div id="root"></div>` from the HTML file. `createRoot` binds React's rendering system to it, preparing the app to display content.<br><br>
+
+```jsx
+root.render(
+  <App />
+)
+```
+
+**Purpose:** Renders the `App` component inside the created React root.
+
+**Benefit:** Displays the entire application within the specified DOM element while React manages updates efficiently.
+
+**Explanation:** This mounts the `App` component (and everything inside it) to the browser, making the app visible and interactive for the user.<br><br>
+
+#### `App.jsx` file
+
+```jsx
+import { Header } from "./components/Header.jsx";
+```
+
+**Purpose:** Imports the `Header` component.
+
+**Benefit:** Keeps the UI modular and reusable by separating the header section into its own file.
+
+**Explanation:** This allows `App.jsx` to render a consistent header without duplicating code, improving maintainability.<br><br>
+
+```jsx
+import { Main } from "./components/Main.jsx";
+```
+
+**Purpose:** Imports `Main` component.
+
+**Benefit:** Encapsulates the main content logic in a dedicated component for better structure and readability.
+
+**Explanation:** This ensures that all core application content is handled separately, making the `App` cleaner and easier to manage.<br><br>
+
+```jsx
+export default function App() {...}
+```
+
+**Purpose:** Defines the root React component `App` and exports it as the default export.
+
+**Benefit:** Enables `App` to be imported easily in `index.jsx` as the main entry point of the application.
+
+**Explanation:** Default export ensures this component can be mounted directly onto the DOM by React, serving as the central container of the frontend.<br><br>
+
+```jsx
+return (
+  <div className="container">
+    <Header />
+    <Main />
+  </div>
+);
+```
+
+**Purpose:** Returns the JSX structure of the app.
+
+**Benefit:** Provides a clean layout with a container `<div>` wrapping the `Header` and `Main` components.
+
+**Explanation:** The `<Header />` is rendered first (for branding/navigation), followed by `<Main />` (the dynamic content). The `className="container"` ensures global styling consistency.<br><br>
+
+#### `Header.jsx` file
+
+```jsx
+import chefClaudeLogo from "../images/chef-claude-icon.png";
+```
+
+**Purpose:** Imports the Chef Claude logo image from the `images` folder.
+
+**Benefit:** Centralizes asset usage so the logo can be easily referenced, reused, or replaced without hardcoding paths multiple times.
+
+**Explanation:** The imported image becomes a variable (`chefClaudeLogo`) that React can render in the component just like any other JavaScript resource.<br><br>
+
+```jsx
+function Header() {...}
+```
+
+**Purpose:** Declares the `Header` functional component.
+
+**Benefit:** Encapsulates all header-related UI logic in a reusable, isolated function.
+
+**Explanation:** This function defines the structure of the header, which can be reused in `App.jsx` or any other component.<br><br>
+
+```jsx
+return (
+  <header className="header-container">
+    ...
+  </header>
+);
+```
+
+**Purpose:** Begins the JSX returned by the component, wrapping content in a semantic `<header>` tag.
+
+**Benefit:** Improves accessibility and SEO by indicating that this section represents the page header.
+
+**Explanation:** The `className="header-container"` links this section to CSS styling, ensuring consistent design.<br><br>
+
+```jsx
+<img className="logo" src={chefClaudeLogo} alt="Chef Claude icon" />
+```
+
+**Purpose:** Renders the logo image with a CSS class and accessibility attributes.
+
+**Benefit:** Displays the Chef Claude brand visually while keeping the site accessible for screen readers via the `alt` attribute.
+
+**Explanation:** The `src` uses the imported variable `chefClaudeLogo`, ensuring the correct image file is bundled by the build process.<br><br>
+
+```jsx
+<h1 className="logo-title">Chef Claude</h1>
+```
+
+**Purpose:** Renders the main title of the application.
+
+**Benefit:** Provides a clear, textual identity of the app for both users and search engines.
+
+**Explanation:** The `<h1>` semantic tag ensures proper heading hierarchy, while `className="logo-title"` applies styling.<br><br>
+
+```jsx
+export { Header }
+```
+
+**Purpose:** Exports the `Header` component for use in other files, like `App.jsx`.
+
+**Benefit:** Allows modular and reusable architecture, where components can be imported wherever needed.
+
+**Explanation:** The named export makes it explicit which component is being exported, supporting scalable project structure.<br><br>
+
+#### `Main.jsx` file
+
+```jsx
+import { useState } from "react";
+```
+
+**Purpose:** Imports the `useState` hook from the React library to enable local state management within the `Main` functional component.
+
+**Benefit:** Provides a way to store and update dynamic values, such as user input, loading indicators, and AI-generated recipe text, without relying on external state libraries or class components.
+
+**Explanation:** The `Main` component is responsible for capturing the user's ingredients, sending them to the backend, and displaying the resulting recipe. To manage this interactive flow, `useState` is used to define reactive variables like `ingredients`, `loading`, and `recipeText`. These variables update automatically when the user types, submits a request, or receives a response. This hook is essential for maintaining a responsive and intuitive user experience, allowing the UI to reflect changes in real time as the user interacts with the app.<br><br>
+
+```jsx
+import { ClaudeRecipe } from "./ClaudeRecipe";
+import { IngredientsList } from "./IngredientsList";
+```
+
+**Purpose:** Imports two child components, `ClaudeRecipe` and `IngredientsList`, to be used within the `Main` component.
+
+**Benefit:** Promotes modularity and separation of concerns by delegating specific UI responsibilities to dedicated components, improving readability, maintainability, and scalability of the codebase.
+
+**Explanation:** The `Main` component orchestrates the core user experience, but it delegates key visual and functional tasks to child components, `ClaudeRecipe` is responsible for rendering the AI-generated recipe, including formatting and presentation. `IngredientsList` manages the display of user-provided ingredients and controls the logic for triggering recipe generation (e.g., handling the "Get a recipe" button). By isolating these roles into separate files, the code remains clean and focused, making it easier to test, debug, and evolve each part of the interface independently.<br><br>
+
+```jsx
+function Main() {...}
+```
+
+**Purpose:** Declares the `Main` functional component.
+
+**Benefit:** Encapsulates the app's core logic and main user interaction area.
+
+**Explanation:** This component acts as the central hub for state management and UI flow.<br><br>
+
+```jsx
+const [ingredients, setIngredients] = useState([]);
+const [recipeText, setRecipeText] = useState("");
+const [loading, setLoading] = useState(false);
+const [recipeShown, setRecipeShown] = useState(false);
+```
+
+**Purpose:** Declares and initializes four state variables using React's `useState` hook to manage the core interactive data within the `Main` component.
+
+**Benefit:** Enables the UI to respond dynamically to user actions and backend responses by triggering re-renders whenever these values change.
+
+**Explanation:** In the Chef Claude frontend, these state variables form the backbone of the user experience:
+  - `ingredients`: Stores the list of ingredients typed by the user.
+  - `recipeText`: Holds the recipe returned by the backend after AI inference.
+  - `loading`: Tracks whether a request is in progress, allowing the UI to notify.
+  - `recipeShown`: Controls whether the recipe section should be visible, helping toggle between input and output views.
+
+Each `useState` call sets an initial value and returns a setter function (e.g., `setIngredients`) that updates the state. When any of these values change, React automatically re-renders the component to reflect the new state, ensuring a smooth and reactive interface.<br><br>
+
+```jsx
+function addIngredient(formData) { ... }
+```
+
+**Purpose:** Defines a reusable function named `addIngredient` that receives a `formData` object as its parameter, triggered by a form submission event.
+
+**Benefit:** Acts as the centralized handler for capturing and validating new ingredient entries, ensuring that the application's state updates dynamically and consistently as users interact with the input form.
+
+**Explanation:** The `addIngredient` function is designed to handle form submissions. It receives a `formData` object, which is an instance of the browser's `FormData` API. This object is created when the form is submitted and the associated handler is invoked. Crucially, this function is linked to the form via `action` attribute, which explicitly references the function by name (e.g., `action={addIngredient}` in JSX). This association ensures that when the form is submitted, React routes the submission event to the correct handler function. The form element itself is returned by the component and includes the necessary structure and attributes, such as `name` and `action`, to ensure proper behavior. Inside `addIngredient`, the function extracts the value of the input field (e.g., `formData.get("ingredient")`) and uptdates the `ingredients` state using its setter. This design keeps form-handling logic encapsulated, promotes reusability, and ensures that the form behaves predictably within the React component lifecycle.<br><br>
+
+```jsx
+const newIngredient = formData.get('ingredient');
+```
+
+**Purpose:** Extracts the value of the input named `ingredient` from the submitted form data.
+
+**Benefit:** Retrieves the user's typed ingredient in a clean and declarative way, enabling validation and state updates without manual DOM access.
+
+**Explanation:** This line is part of the `addIngredient` function, which handles form submissions. The `formData` parameter is an instance of the `FormData` API, automatically passed to the function because it is explicitly linked to the form via the `action` attribute. This attribute ensures that the form submission is routed to the correct handler function. The form itself is returned by the component and includes an input field with the `name="ingredient"` attribute. When the form is submitted, `formData.get('ingredient')` accesses the value of that specific input field. The result is stored in the `newIngredient` variable, which can then be validated and added to the `ingredients` state. This approach keeps the data flow declarative and avoids manual DOM querying, aligning with React's component-driven architecture.<br><br>
+
+```jsx
+if (newIngredient) {
+  setIngredients(prevIngredients =>
+    [...prevIngredients, newIngredient]);
+}
+```
+
+**Purpose:** Updates the `ingredients` state by appending a new item, but only if the input value is not empty.
+
+**Benefit:** Prevents invalid or blank entries from being added to the list while preserving all previously submitted ingredients, ensuring data integrity and a smooth user experience.
+
+**Explanation:** This conditional block is part of the `addIngredient` function, which is linked to the form via the `action` attribute. After extracting the input value using `formData.get('ingredient')`, the code checks whether `newIngredient` contains a non-empty string. If the value is valid, the `setIngredients` function is called using its functional (updater) form: `prevIngredients => [...prevIngredients, newIngredient]`. This syntax uses the **spread operator** (`...`) to unpack all items from the previous `ingredients` array and create a new array that includes the new item at the end. This approach ensures immutability—React requires state updates to produce new objects rather than modifying existing ones—and avoids overwriting the previous state. The updater form also guarantees that the most recent state is used, preventing race conditions when multiple updates occur in rapid succession. As a result, the ingredient list remains reactive, consistent, and accurately reflects user input.<br><br>
 
