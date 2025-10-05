@@ -74,6 +74,7 @@ This project was developed as a required activity for the **Learn React** module
 
 ## ⚙️ Backend
 
+
 ### `server.js` file
 
 ```js
@@ -289,6 +290,7 @@ app.listen(PORT, () => {
 
 **Explanation:** This snippet ensures that the server is accessible and ready to handle requests from the frontend. It first checks if a `PORT` variable is defined in the environment, typically injected by the hosting provider during deployment. If not, it defaults to port `3000`, which is standard for local development. Once the server starts, it logs a message to the console with the full local URL, helping me to confirm that the backend is running and reachable. This setup is essential for completing the frontend-backend communication loop, allowing users to submit ingredients and receive AI-generated recipes.<br><br>
 
+
 ### `.gitignore` file
 
 ```gitignore
@@ -317,7 +319,8 @@ node_modules/
 
 ### 🧱 HTML Structure
 
-#### `index.html` file
+
+### `index.html` file
 
 - Root container `<div id="root"></div>` for mounting the React application
 - React entry script `<script type="module" src="./src/index.jsx"></script>`
@@ -350,7 +353,8 @@ node_modules/
 
 ### ⚛️ React Component Code Explanation
 
-#### `index.jsx` file
+
+### `index.jsx` file
 
 ```jsx
 import { createRoot } from "react-dom/client";
@@ -394,7 +398,8 @@ root.render(
 
 **Explanation:** This mounts the `App` component (and everything inside it) to the browser, making the app visible and interactive for the user.<br><br>
 
-#### `App.jsx` file
+
+### `App.jsx` file
 
 ```jsx
 import { Header } from "./components/Header.jsx";
@@ -441,7 +446,8 @@ return (
 
 **Explanation:** The `<Header />` is rendered first (for branding/navigation), followed by `<Main />` (the dynamic content). The `className="container"` ensures global styling consistency.<br><br>
 
-#### `Header.jsx` file
+
+### `Header.jsx` file
 
 ```jsx
 import chefClaudeLogo from "../images/chef-claude-icon.png";
@@ -507,7 +513,8 @@ export { Header }
 
 **Explanation:** The named export makes it explicit which component is being exported, supporting scalable project structure.<br><br>
 
-#### `Main.jsx` file
+
+### `Main.jsx` file
 
 ```jsx
 import { useState } from "react";
@@ -799,3 +806,154 @@ return (
 **Benefit:** Ensures that the recipe output is only displayed when appropriate, maintaining a clean and context-sensitive interface that responds to user actions.
 
 **Explanation:** This JSX expression uses *short-circuit* evaluation to determine whether the `<ClaudeRecipe />` component should be rendered. The condition `recipeShown` acts as a boolean flag that reflects whether a recipe has been successfully generated and should be displayed. If `recipeShown` is `true`, the component is rendered and receives the `recipeText` string as a prop. This structure guarantees that the recipe sectino remains hidden until a valid recipe is available, preserving the logical flow of the interface and preventing premature or empty rendering.<br><br>
+
+```jsx
+export { Main }
+```
+
+**Purpose:** Exports the `Main` component.
+
+**Benefit:** Makes the component reusable and importable in other files like `App.jsx`.
+
+**Explanantion:** Named export keeps module structure clear and explicit.<br><br>
+
+
+### `IngredientsList.jsx` file
+
+```jsx
+function IngredientsList({ ingredients, fetchRecipe, resetApp, recipeShown }) {...}
+```
+
+**Purpose:** Defines a functional React component named `IngredientsList`, which receives external data and behavior handlers via props.
+
+**Benefit:** Enables the parent component (`Main.jsx`) to delegate both the rendering of the ingredient list and the control logic for recipe generation and reset, promoting modularity and separation of concerns.
+
+**Explanation:** This line declares the `IngredientsList` component and uses destructuring to extract four props passed from its parent (`Main.jsx`). These props provide both data and control logic, allowing the component to remain *stateless* and fully governed by external inputs. Each prop plays a specific role in defining the component's behavior and rendering.
+ - **`ingredients`:** An array containing the current list of user-submitted ingredients. It is used to render the visible list inside the component.
+ - **`fetchRecipe`:** A function passed down to trigger the recipe generation process when the user requests it.
+ - **`resetApp`:** A function used to reset the application state, clearing ingredients and hiding the recipe section.
+ - **`recipeShown`:** A boolean flag that indicates whether a recipe is currently displayed. It is used to conditionally control the button behavior and visibility logic within the component.<br><br>
+
+```jsx
+const ingredientsListItems = ingredients.map((ingredient, index) => (
+  <li key={index}>{ingredient}</li>
+));
+```
+
+**Purpose:** Creates a list of `<li>` elements representing each ingredient provided by the user.
+
+**Benefit:** Dynamically renders all submitted ingredients in a readable, accessible list format without hardcoding items. Each entry is added explicitly through user interaction with the `"Add ingredient"` button in `Main.jsx`, ensuring controlled and intentional updates to the list.
+
+**Explanation:** This line uses the `.map()` method to transform the `ingredients` array into a new array of JSX `<li>` elements. Each iteration extracts the `ingredient` value and its corresponding `index`. The `ingredient` is rendered as the content of the list item, while the `index` is used as the `key` prop — a requirement in React to help differentiate elements during re-rendering. Although using the index as a key is acceptable in static or append-only lists like this one, it's generally discouraged in dynamic lists where items might be reordered or removed. In the context of Chef Claude, this approach ensures that the list of ingredients updates in response to explicit user actions, specifically when the `"Add ingredient"` button is clicked. This guarantees that each entry is intentional and the rendered list reflects only confirmed additions.<br><br>
+
+```jsx
+const buttonLabel = recipeShown ? "New recipe" : "Get a recipe";
+```
+
+**Purpose:** Defines the text label for the button based on whether a recipe has already been generated.
+
+**Benefit:** Improves the user experience by updating the button message to reflect the current app state, guiding the user's next action clearly and contextually.
+
+**Explanation:** This line uses a *ternary operator* to assign a value to the `buttonLabel` constant. It evaluates the `recipeShown` boolean to determine which label should be displayed:
+ - If `recipeShown` is `true`, the label becomes `"New recipe"`, signaling that a recipe is already visible and the user can initiate a new one.
+ - If `recipeShown` is `false`, the label becomes `"Get a recipe"`, prompting the user to generate a recipe based on the current list of ingredients.
+
+This dynamic labeling ensures that the button's purpose is always clear, adapting to the application's state without requiring additional logic or manual updates.<br><br>
+
+```jsx
+const handleClick = recipeShown ? resetApp : fetchRecipe;
+```
+
+**Purpose:** Determines which function should be executed when the button is clicked.
+
+**Benefit:** Keeps the logic clean and avoids creating two separate buttons for similar actions, streamlining the interface and reducing redundancy.
+
+**Explanation:** This line uses a *ternary operator* to assign a function to the `handleClick` constant based on the value of `recipeShown`:
+ - If `recipeShown` is `true`, `handleClick` is set to `resetApp`, meaning the button will reset the application state when clicked.
+ - If `recipeShown` is `false`, `handleClick` is set to `fetchRecipe`, meaning the button will initiate recipe generation.
+
+This conditional assignment allows a single button to serve dual purposes depending on the current state of the app, maintaining a simple and intuitive user experience within the Chef Claude interface.<br><br>
+
+```jsx
+return (
+  <section className="recipe-container">
+    ...
+  </section>
+);
+```
+
+**Purpose:** Begins the JSX returned by the component, rendering a semantic `<section>` element as the main container for the recipe-related interface.
+
+**Benefit:** Provides a logical and accessible structure for grouping related UI elements, helping both developers and assistive technologies understand the role and boundaries of this region.
+
+**Explanation:** This line initiates the return statement of the component, wrapping its visual output in a `<section>` tag, a semantic HTML element used to define standalone blocks of related content. The `className="recipe-container"` applies scoped CSS styles that visually organize and format the section, ensuring consistency with the Chef Claude design system. This structural choice improves readability, accessibility, and maintainability across the interface.<br><br>
+
+```jsx
+<h2>Ingredients on hand:</h2>
+```
+
+**Purpose:** Displays a section heading that introduces the list of added ingredients.
+
+**Benefit:** Enhances accessibility and structural clarity, allowing users and assistive technologies to immediately recognize the role of the section within the interface.
+
+**Explanation:** The `<h2>` tag is a semantic HTML element that denotes a second-level heading in the document hierarchy. It signals that this section is a distinct and meaningful part of the page, specifically the area where submitted ingredients are listed. By using `<h2>`, the Chef Claude interface maintains a logical heading structure, which benefits screen readers, improves SEO, and reinforces visual organization for all users.<br><br>
+
+```jsx
+<ul className="ingredients-list" aria-live="polite">
+  {ingredientsListItems}
+</ul>
+```
+
+**Purpose:** Displays all submitted ingredients as a list, updating its contents whenever a new item is added via user interaction.
+
+**Benefit:** The `aria-live="polite"` attribute ensures assistive technologies (like screen readers) are notified of changes to the list without disrupting the user's current activity, maintaining a smooth and accessible experience.
+
+**Explanation:** This `<ul>` element serves as the container for the dynamically generated `<li>` items stored in `ingredientsListItems`. These items reflect the current state of the `ingredients` array, which is updated each time the user clicks the `"Add ingredient"` button. The `className="ingredients-list"` links the list to specific CSS styles that control its appearence. The `aria-live="polite"` attribute plays a key accessibility role by allowing screen readers to announce updates to the list in a non-intrusive manner, ensuring that users with assistive needs are kept informed without interrupting their workflow.<br><br>
+
+```jsx
+{ingredients.length > 3 && (
+  <div className="get-recipe-container">
+    ...
+  </div>
+)}
+```
+
+**Purpose:** Conditionally renders a section that prompts the user to generate a recipe, but only after more than three ingredients have been submitted.
+
+**Benefit:** Prevents premature access to the recipe generation feature, encouraging users to input a sufficient number of ingredients to ensure the AI has meaningful data to work with.
+
+**Explanation:** The JSX block uses the logical `&&` operator to evaluate whether `ingredients.length > 3`. If the condition is true, the `<div>` with class `"get-recipe-container"` is rendered; otherwise, it's omitted. This ensures that the recipe generation interface only appears when the user has submitted at least four ingredients, a threshold that helps maintain the quality and relevance of the generated output in Chef Claude.<br><br>
+
+```jsx
+<div>
+  <h3>Ready for a recipe?</h3>
+  <p>Generate a recipe from your list of ingredients.</p>
+</div>
+```
+
+**Purpose:** Provides context and instructions to the user before generating a recipe.
+
+**Benefit:** Improves usability by clearly indicating what the next action does.
+
+**Explanation:** The inner `<div>` groups the heading and descriptive text. The `<h3>` and `<p>` tags semantically separate the title and explanatory content.<br><br>
+
+```jsx
+<button onClick={handleClick}>{buttonLabel}</button>
+```
+
+**Purpose:** Renders a button that either triggers recipe generation or resets the app, depending on the current state of the interface.
+
+**Benefit:** Provides a single, adaptive control element that simplifies user interaction by consolidating two related actions into one intuitive button.
+
+**Explanation:** This `<button>` element uses the `onClick` attribute to bind its behavior to the `handleClick` function, which was conditionally assigned earlier based on the `recipeShown` flag. If a recipe is currently displayed, clicking the button will reset the app via `resetApp`; otherwise, it will initiate recipe generation via `fetchRecipe`. The button's label is dynamically set by the `buttonLabel` variable, ensuring that the text always reflects the intended action.<br><br>
+
+```jsx
+export { IngredientsList };
+```
+
+**Purpose:** Exports the `IngredientsList` component for use in other files, such as `Main.jsx`.
+
+**Benefit:** Makes the component reusable and modular, following React's component-based architecture.
+
+**Explanation:** The named export syntax allows multiple exports per file and must be imported using the same name elsewhere.<br><br>
+
