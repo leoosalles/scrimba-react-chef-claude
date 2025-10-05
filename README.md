@@ -590,5 +590,212 @@ if (newIngredient) {
 
 **Benefit:** Prevents invalid or blank entries from being added to the list while preserving all previously submitted ingredients, ensuring data integrity and a smooth user experience.
 
-**Explanation:** This conditional block is part of the `addIngredient` function, which is linked to the form via the `action` attribute. After extracting the input value using `formData.get('ingredient')`, the code checks whether `newIngredient` contains a non-empty string. If the value is valid, the `setIngredients` function is called using its functional (updater) form: `prevIngredients => [...prevIngredients, newIngredient]`. This syntax uses the **spread operator** (`...`) to unpack all items from the previous `ingredients` array and create a new array that includes the new item at the end. This approach ensures immutability—React requires state updates to produce new objects rather than modifying existing ones—and avoids overwriting the previous state. The updater form also guarantees that the most recent state is used, preventing race conditions when multiple updates occur in rapid succession. As a result, the ingredient list remains reactive, consistent, and accurately reflects user input.<br><br>
+**Explanation:** This conditional block is part of the `addIngredient` function, which is linked to the form via the `action` attribute. After extracting the input value using `formData.get('ingredient')`, the code checks whether `newIngredient` contains a non-empty string. If the value is valid, the `setIngredients` function is called using its functional (updater) form: `prevIngredients => [...prevIngredients, newIngredient]`. This syntax uses the *spread operator* (`...`) to unpack all items from the previous `ingredients` array and create a new array that includes the new item at the end. This approach ensures immutability—React requires state updates to produce new objects rather than modifying existing ones—and avoids overwriting the previous state. The updater form also guarantees that the most recent state is used, preventing race conditions when multiple updates occur in rapid succession. As a result, the ingredient list remains reactive, consistent, and accurately reflects user input.<br><br>
 
+```jsx
+async function fetchRecipe() { ... }
+```
+
+**Purpose:** Declares an asynchronous function named `fetchRecipe` that handles the process of requesting a recipe from the backend.
+
+**Benefit:** Enables the frontend to communicate with the backend using asynchronous HTTP requests, allowing the application to handle network delays without freezing the interface. This ensures that the UI remains responsive while waiting for the AI-generated recipe.
+
+**Explanation:** This function is responsible for sending the current list of ingredients to the backend and retrieving the corresponding recipe. The `async` keyword indicates that the function will perform asynchronous operations, specifically using `await` to pause execution until the backend responds. This function is triggered when the user clicks the "Get a recipe" button, which is rendered by the `IngredientsList` component. The function encapsulates the entire request-response cycle: preparing the payload, sending it via `fetch`, handling loading states, and updating the `recipeText` and `recipeShown` state variables with the result. By isolating this logic in a named function, the code remains modular, readable, and easy to maintain.<br><br>
+
+```jsx
+if (ingredients.length === 0) return;
+```
+
+**Purpose:** Prevents the execution of the recipe-fetching logic when the ingredients list is empty.
+
+**Benefit:** Avoids unnecessary backend requests and ensures that the application only attempts to generate a recipe when there is valid input from the user.
+
+**Explanation:** This conditional check appears at the beginning of the `fetchRecipe` function. It verifies whether the `ingredients` array contains any items by checking its `.length` property. If the array is empty (`length === 0`), the function exits early using `return`, skipping the rest of the logic. This **guard clause** protects the backend from receiving invalid or incomplete requests and improves performance by eliminating redundant operations. It also contributes to a better user experience by silently ignoring recipe requests that lack ingredients, ensuring that only meaningful submissions trigger a response.<br><br>
+
+```jsx
+setLoading(true);
+try {
+  const response = await fetch("http://localhost:3000/api", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt: `You are an assistant that receives a list of ingredients          that a user has and suggests a recipe.\nUser ingredients:
+      ${ingredients.join(", ")}`
+    })
+  });
+```
+
+**Purpose:** Sends a POST request to the backend API with the user's ingredient list formatted as a prompt.
+
+**Benefit:** Connects the frontend to the AI-powered backend, enabling dynamic recipe generation based on user input. By using asynchronous communication, the UI remains responsive while the request is processed.
+
+**Explanation:** This block initiates the recipe-fetching process within the `fetchRecipe` function. The following steps outline how the request is handled:
+ - **Set loading state:** `setLoading(true)` activates the loading indicator, indicating that a request is currently in progress and enabling the UI to display a feedback message to the user.
+ - **Initiate fetch request:** The `fetch` function is called with the backend endpoint `http://localhost:3000/api` using the `POST` method.
+ - **Configure headers:** The request includes a `Content-Type` header set to `"application/json"` to inform the server that the payload is in JSON format.
+ - **Build the payload:** A ``prompt` string is constructed using `ingredients.join(", ")`, which converts the array of ingredients into a comma-separated list.
+ - **Send the prompt:** The prompt is embedded in the request body using `JSON.stringify`, guiding the backend assistant to generate a recipe based on the provided ingredients.
+ - **Await the response:** The `await` keyword pauses execution until the backend responds, ensuring the UI remains non-blocking. Once the response arrives, `response.json()` is called to parse the JSON-formatted body into a JavaScript object. This parsed object (`data`) contains the recipe generated by the backend and is used to update the application state. This step is essential for converting raw network data into a usable format for rendering in the UI.
+ - **Maintain responsiveness:** Because the request is asynchronous, the interface remains interactive during the process, users can still engage with the page while waiting for the recipe.
+ - **Ensure clean architecture:** This structure separates data-fetching logic from rendering, promoting modularity and seamless integration between the React frontend and the backend service.<br><br>
+
+```jsx
+const data = await response.json();
+```
+
+**Purpose:** Updates the `recipeText` state with the recipe returned by the backend, or show a fallback message if no recipe was generated.
+
+**Benefit:** Ensures that the UI displays meaningful feedback to the user, whether or not the backend returns a valid recipe.
+
+**Explanation:** After the backend response is parsed with `const data = await response.json();`, this line sets the `recipeText` state using the value of `data.text`. The `text` property is created in the backend, inside the `POST /api` route defined in `backend/server.js`. There, the AI-generated recipe is extracted from the Hugging Face response using:
+
+```jsx
+const text =
+  response?.choices?.[0]?.message?.content ??
+  response?.generated_text ??
+  JSON.stringify(response);
+```
+
+This value is then returned to the frontend with:
+
+```jsx
+res.json({ text });
+```
+
+On the frontend, `data.text` is expected to contain the recipe. If it's falsy (e.g., `undefined`, `null`, or an empty string), the fallback string `"No recipe generated."` is used instead. This is achieved using the logical OR operator (`||`), which ensures that `recipeText` always receives a valid string. The updated state is then rendered in the UI, allowing the user to view the recipe or an appropriate message.<br><br>
+
+```jsx
+setRecipeShown(true);
+```
+
+**Purpose:** Updates the `recipeShown` state to `true`, signaling that the recipe should now be displayed in the UI.
+
+**Benefit:** Controls the visibility of the recipe section, allowing the interface to conditionally render the result only after a successful response is received.
+
+**Explanation:** This line is called after the recipe is fetched and parsed from the backend. By setting `recipeShown` to `true`, the component triggers a re-render that reveals the recipe display area, hidden by default. This boolean flag acts as a visibility toggle, ensuring that the recipe content is only shown when available. It helps maintain a clean user experience by preventing premature rendering or layout shifts before the data is ready.<br><br>
+
+```jsx
+   } catch (err) {
+     console.error(err);
+     setRecipeText("An error occurred while generating the recipe.");
+     setRecipeShown(true);
+   } finally {
+     setLoading(false);
+   }
+};
+```
+
+**Purpose:** Handles unexpected errors during the recipe-fetching process and ensures that the loading indicator is always reset, regardless of success or failure.
+
+**Benefit:** Prevents the application from freezing or becoming unresponsive in case of backend or network failures, while providing clear feedback to the user and restoring interactivity.
+
+**Explanation:** This block appears at the end of the `fetchRecipe` function, which performs an asynchronous request to the backend to generate a recipe using Hugging Face's Mixtral model. If any error occurs during the request, such as a failed network call, invalid response, or internal exception, the `catch` clause captures it and logs the error using `console.error(err)` for debugging purposes. The UI is then updated with a fallback message via `setRecipeText("An error occurred while generating the recipe.");`, ensuring the user is informed that something went wrong. The recipe section is revealed using `setRecipeShown(true)` so that the error message is visible in the expected layout. Finally, the `finally` block executes regardless of the outcome and calls `setLoading(false);` to reset the loading state, avoiding stuck messages.<br><br>
+
+```jsx
+function resetApp() {
+  setIngredients([]);
+  setRecipeText("");
+  setRecipeShown(false);
+};
+```
+
+**Purpose:** Resets the application state to its initial configuration by clearing the ingredients list, removing any generated recipe text, and hiding the recipe display area.
+
+**Benefit:** Allows users to start fresh without residual data from previous interactions. This improves usability by offering a clean slate for each new recipe request and avoids confusion caused by leftover content.
+
+**Explanation:** The `resetApp` function is used to restore the interface to its default state. It sets the ingredients array to an empty list using `setIngredients([])`, effectively removing all user-provided inputs. Then, it clears the recipe output by calling `setRecipeText("")`, ensuring that no previous recipe remains visible. Finally, `setRecipeShown(false)` hides the recipe section from the UI, returning the layout to its pre-submission state. This function is conditionally assigned to the `"Get a recipe"` button only when the recipe section is visible, that is, when `recipeShown` is `true`. In this case, the button's label is also dynamically changed to `"New Recipe"` to reflect its new role. This dual behavior ensures that the same button serves two distinct purposes depending on the application state: triggering a recipe request when no recipe is shown, and resetting the interface when a recipe is already displayed.<br><br>
+
+```jsx
+return (
+  <main role="main">
+    <section className="form-container">
+      ...
+    </section>
+  </main>
+)
+```
+
+**Purpose:** Defines the main layout structure of the Chef Claude interface, wrapping the form section inside semantic HTML elements for accessibility and clarity.
+
+**Benefit:** Improves semantic markup and accessibility by clearly indicating the primary content area of the page. It also provides a clean container for styling and layout control vi the `form-container` class.
+
+**Explanation:** This JSX block represents the top-level return statement of the component responsible for rendering the recipe input interface. The `<main>` tag is used with the `role="main"` attribute to explicitly declare the central content region of the page, which helps screen readers and accessibility tools identify the core functionality. Inside it, the `<section>` element with the class `form-container` serves as a styled wrapper for the form elements, such as the ingredients input and the action button.<br><br>
+
+```jsx
+<form className="add-ingredient-form" action={addIngredient}> ... </form>
+```
+
+**Purpose:** Declares the semantic structure for the ingredient submission interface and assign the form’s submission behavior to a specific handler via the action attribute.
+
+**Benefit:** Enables users to input ingredients dynamically, triggering controlled state updates that feed into the recipe generation logic. This keeps the interface interactive and responsive to user input.
+
+**Explanation:** This line defines the form element responsible for collecting individual ingredients from the user. The `<form>` tag is used to group related input elements in a semantically meaningful way, signaling to both the browser and assistive technologies that this section handles user-submitted data. The `className="add-ingredient-form"` applies scoped styling to control layout and spacing. The `action={addIngredient}` attribute assigns a custom submission handler to the form, allowing the application to intercept and process the input programmatically. This approach bypasses the default HTML form behavior (which would reload the page) and instead routes the submission through the designated function, enabling controlled state updates and dynamic interaction.<br><br>
+
+```jsx
+<fieldset>
+  <legend className="sr-only">Form to add ingredients for AI-generated recipes</legend>
+    ...
+</fieldset>
+```
+
+**Purpose:** Groups related form elements into a single semantic unit and provide provides an accessible label for screen readers via the `<legend>` element.
+
+**Benefit:** Enhances accessibility and semantic clarity by explicitly defining the purpose of the form section, allowing assistive technologies to interpret and navigate the interface more effectively.
+
+**Explanation:** This block wraps the input field and button used to submit ingredients. The `<fieldset>` element is a semantic HTML tag used to group related controls within a form, signaling that they belong to a common function, in this case, ingredient submission. The `<legend>` element provides a textual description of the fieldset's purpose. It uses the `className="sr-only"` to visually hide the label while keeping it accessible to screen readers. This ensures that users relying on assistive technologies receive contextual information about the form's intent, even though the label is not visible on screen.<br><br>
+
+```jsx
+<div className="input-container">
+  <input
+    className="input-field"
+    type="text"
+    aria-label="Add ingredient"
+    placeholder="e.g. oregano"
+    name="ingredient"
+  />
+  <button type="submit" className="btn search">Add ingredient</button
+</div>
+```
+
+**Purpose:** Groups the ingredient input field and submit button visually and semantically within a styled container.
+
+**Benefit:** Provides a clean and accessible interface for users to input ingredients, with clear labeling and layout control that enhances usability and responsiveness.
+
+**Explanation:** This block defines the core input mechanism for adding ingredients. The `<div className="input-container">` serves as a wrapper to apply layout and spacing styles to the input and button elements. The `<input>` element is configured with `type="text"` to accept textual input, and includes `aria-label="Add ingredient"` to ensure screen readers can identify its purpose. The placeholder="e.g. oregano" guides users by showing an example value, and the name="ingredient" attribute links the input’s content to formData.get('ingredient') when the form is submitted. The `<button>` element with `type="submit"` triggers the form submission, and its `className="btn search"` applies styling consistent with the application's visual language.<br><br>
+
+```jsx
+{ingredients.length > 0 && (
+  <IngredientsList
+    ingredients={ingredients}
+    fetchRecipe={fetchRecipe}
+    resetApp={resetApp}
+    recipeShown={recipeShown}
+  />
+)}
+```
+
+**Purpose:** Conditionally renders the `<IngredientsList />` component only when the `ingredients` array contains at least one item.
+
+**Benefit:** Prevents unnecessary rendering of the ingredient list section when there are no ingredients to display, keeping the interface clean and focused.
+
+**Explanation:** This JSX expression uses a *short-circuit* conditional (`ingredients.length > 0 && (...)`) to determine whether the `<IngredientsList />` component should be rendered. The condition checks if the `ingredients` array has one or more elements. If true, the component is rendered and receives four props: `ingredients`, `fetchRecipe`, `resetApp`, and `recipeShown`. This ensures that the ingredient list and its associated controls (such as the button that conditionally triggers either `fetchRecipe` or `resetApp`) are only visible when relevant data exists. By hiding the component when the list is empty, the interface avoids displaying empty or misleading sections, maintaining a streamlined and intuitive user experience.<br><br>
+
+```jsx
+{loading && <p className="loading">Loading recipe...</p>}
+```
+
+**Purpose:** Conditionally renders a loading message while the recipe is being fetched, using the `loading` boolean as the trigger.
+
+**Benefit:** Provides immediate visual feedback to the user during asynchronous operations, reinforcing that the application is actively processing the request.
+
+**Explanation:** This JSX expression uses *shor-circuit* evaluation to display a `<p>` element only when the `loading` state is `true`. This mechanism ensures that users are informed of background activity during recipe generation, improving perceived responsiveness and reducing uncertainty during wait times. The message disappears automatically once `loading` becomes `false`, keeping the interface clean and focused.<br><br>
+
+```jsx
+{recipeShown && <ClaudeRecipe recipe={recipeText} />}
+```
+
+**Purpose:** Conditionally renders the `<ClaudeRecipe />` component based on the visibility state of the recipe section.
+
+**Benefit:** Ensures that the recipe output is only displayed when appropriate, maintaining a clean and context-sensitive interface that responds to user actions.
+
+**Explanation:** This JSX expression uses *short-circuit* evaluation to determine whether the `<ClaudeRecipe />` component should be rendered. The condition `recipeShown` acts as a boolean flag that reflects whether a recipe has been successfully generated and should be displayed. If `recipeShown` is `true`, the component is rendered and receives the `recipeText` string as a prop. This structure guarantees that the recipe sectino remains hidden until a valid recipe is available, preserving the logical flow of the interface and preventing premature or empty rendering.<br><br>
