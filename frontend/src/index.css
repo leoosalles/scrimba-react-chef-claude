@@ -152,9 +152,17 @@ ul.ingredients-list>li {
     font-weight: 400;
 }
 
-.suggestion-container h2,
-.suggested-recipe-container p {
-    margin-top: 1.5em;
+.suggestion-container-title {
+    margin: 1.5em 0;
+}
+
+.recipe-title,
+.recipe-paragraph {
+    margin-top: 1em;
+}
+
+.recipe-item {
+    font-weight: 400;
 }
 
 .suggested-recipe-container ol li:first-child p {
