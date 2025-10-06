@@ -1080,3 +1080,154 @@ export { ClaudeRecipe };
 **Benefit:** Makes the `ClaudeRecipe` component available for import in `Main.jsx` or other modules.
 
 **Explanation:** Using named exports keeps code organization modular, allowing for cleaner imports and easier testing.<br><br>
+
+### 🧠 AI Integration Module (JavaScript)
+
+### `ai.js` file
+
+```js
+export async function getRecipeFromHF(ingredientsArr) {...}
+```
+
+**Purpose:** Defines and exports an asynchronous function responsible for requesting a recipe from the backend API based on a list of user-provided ingredients.
+
+**Benefit:** Encapsulates the logic for communicating with the AI backend in a reusable and centralized utility. This allows multiple components to generate recipes without duplicating fetch logic or handling low-level API details.
+
+**Explanationg:** The function `getRecipeFromHF` performs the following steps:
+  - **Input:** Receives `ingredientsArr`, an array of ingredient strings.
+  - **Formatting:** Joins the array into a comma-separated string (`ingredientsString`) to be included in the request payload.
+  - **Request:** Sends a `POST` request to the backend endpoint (`http://localhost:3000/api`) with a JSON body containing the formatted prompt.
+  - **Headers:** Sets the `Content-Type` to `application/json` to ensure proper parsing on the server.
+  - **Error Handling:** Checks if the response is not OK (`!response.ok`) and throws an error with th response status text.
+  - **Response Parsing:** Awaits and parses the JSON response, returning the `text` field which contains the generated recipe.
+  - **Fallback:** If any error occur during the request or parsing, logs the error and returns a fallback message: `"An error ocurred while generating the recipe"`.
+
+This function abstracts the AI communication layer, ensuring that frontend components can request recipe suggestions with minimal setup and consistent error handling.<br><br>
+
+```js
+const ingredientsString = ingredientsArr.join(", ");
+```
+
+**Purpose:** Converts an array of ingredient strings into a single comma-separated string.
+
+**Benefit:** Formats the ingredient list into a human-readable and backend-compatible string, making it suitable for inclusion in the API request payload.
+
+**Explanation:** The `join(", ")` method is applied to `ingredientsArr`, which is expected to be an array of strings such as `["tomato", "basil", "garlic"]`. This method concatenates all elements into a single string, inserting a comma and space between each item. The resulting string — e.g., "tomato, basil, garlic" — is embedded into the prompt sent to the backend, allowing the AI model to interpret the ingredients as a coherent list. This step ensures that the input is clean, consistent, and aligned with natural language formatting expectations.<br><br>
+
+```js
+try {...}
+```
+
+**Purpose:** Executes the asynchronous logic for sending a POST request to the backend API and processing the response.
+
+**Benefit:** Ensures that the main operation, generating a recipe from user-provided ingredients, is attempted in a controlled environment, allowing for structured error interception if anything goes wrong.
+
+**Explanation:** The `try` block contains the core logic of the `getRecipeFromHF` function:
+ - Contructs the request payload using the formatted ingredient string.
+ - Sends a `POST` request to the backend endpoint (`/api`) using `fetch` API.
+ - Awaits the response and checks its status using `response.ok`.
+ - If the response is valid, parses the JSON and returns the generated recipe text.
+
+By isolating this logic within a `try` block, the function ensures that any runtime errors, such as network failures, invalid responses, or JSON parsing issues, can be caught and handled gracefully.<br><br>
+
+```js
+const response = await fetch("http://localhost:3000/api", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ prompt: `${SYSTEM_PROMPT}\nUser ingredients: ${ingredientsString}` })
+});
+```
+
+**Purpose:** Sends an asynchronous HTTP POST request to the local backend API endpoint (`/api`) to request recipe generation based on user-provided ingredients.
+
+**Benefit:** Facilitates communication between the frontend and backend, enabling the application to retrieve AI-generated content dynamically. This modular request structure allows for scalable integration with other services or endpoints.
+
+**Explanation:** This block of code initiates a network request from the frontend to the backend using `fetch` API. It's composed of multiple lines that together configure and send a POST request to the `/api` endpoint. The request includes headers and a JSON-formatted body containing a prompt built from a system instruction and the user's ingredients. The `await` keyword ensures that the function pauses until the server responds. The resulting `response` object contains metadata and content that will later be parsed and used in the UI.
+  - `fetch(...)`: Initiates an HTTP request to the specified URL (`http://localhost:3000/api`). In this context, it targets the Express server running locally.
+  - `method: "POST"`: Specifies that the request will use the POST method, which is appropriate for sending data to the server for processing.
+  - `headers: { "Content-Type": "application/json" }`: Informs the server that the request body contains JSON-formatted data, ensuring proper parsing on the backend.
+  - `body: JSON.stringify(...)`: Serializes the payload into a JSON string. The payload includes a `prompt` field that combines a predefined system instruction (`SYSTEM_PROMPT`) with the formatted list of user ingredients (`ingredientsString`).
+  - `await`: Pauses execution until the server responds. This ensures that the response is available before proceeding to parse or handle it.
+
+The `response` object returned from this block contains status information and the body of the reply, which will be used to extract the generated recipe.<br><br>
+
+```js
+method: "POST",
+```
+
+**Purpose:** Specifies the HTTP request method.
+
+**Benefit:** Ensures the data (ingredients) is sent securely in the request body, not via the URL.
+
+**Explanation:** The POST method is used to submit data for processing by the backend, aligning with RESTful conventions for data creation or processing requests.<br><br>
+
+```js
+headers: { "Content-Type": "application/json" },
+```
+
+**Purpose:** Defines the type of content being sent in the request.
+
+**Benefit:** Informs the server that the payload format is JSON, enabling correct parsing.
+
+**Explanation:** This header ensures the backend knows how to interpret the request body (`application/json`).<br><br>
+
+```js
+body: JSON.stringify({ prompt: `${SYSTEM_PROMPT}\nUser ingredients: ${ingredientsString}` });
+```
+
+**Purpose:** Defines the data payload sent to the server in JSON format.
+
+**Benefit:** Passes both the system instruction (`SYSTEM_PROMPT`) and the user-provided ingredients in a consistent structure.
+
+**Explanation:** `JSON.stringify` converts the JavaScript object into a JSON string. The payload includes a prompt string that combines predefined instructions and the user's ingredients.<br><br>
+
+```js
+if (!response.ok) {
+  throw new Error(`Error generating recipe: ${response.statusText}`);
+}
+```
+
+**Purpose:** Validates the HTTP response to ensure it was successful before proceeding with further processing.
+
+**Benefit:** Detects API or network errors early, preventing the application from attempting to parse or use invalid data. This improves reliability and enables clearer error handling.
+
+**Explanation:** This conditional block checks whether the response from the server was successful. The property `response.ok` returns `true` for HTTP status codes in the range **200-299**, which indicate success. If the response falls outside this range, such as 400 (Bad Request) or 500 (Internal Server Error), `response.ok` will be `false`. In that case, the code throws a new `Error` object with a message that includes `response.statusText`, which provides a human-readable description of the error. Throwing this error interrupts the normal flow and transfers control to the `catch` block, where the error can be logged and a fallback message returned.<br><br>
+
+```js
+const data = await response.json();
+```
+
+**Purpose:** Converts the server's JSON response into a JavaScript object.
+
+**Benefit:** Allows easy access to structured response data within the frontend, enabling components to use specific fields like `data.text` directly.
+
+**Explanation:** This line uses `await response.json()` to asynchronously parse the body of the HTTP response. The server returns the recipe data in JSON format, and this method transforms that raw JSON into a usable JavaScript object. By assigning the result to `data`, the application can then access individual properties, such as `data.text`, which contains the generated recipe. The use of `await` ensures that the parsing completes before the next line of code runs, maintaining proper flow in the asynchronous function.<br><br>
+
+```js
+return data.text;
+```
+
+**Purpose:** Returns th AI-generated recipe text to the caller of the `getRecipeFromHF` function.
+
+**Benefit:** Enables the calling component to access and render the recipe content in the user interface, completing the data flow from backend to frontend.
+
+**Explanation:** After parsing the server's response with `await response.json()`, the result is stored in the `data` object. This object contains a `text` property, which holds the actual recipe generated by the AI. The line `return data.text;` extracts that value and sends it back to whatever component or function called `getRecipeFromHF`. This allows the React app to display the recipe to the user.<br><br>
+
+```js
+catch (err) {
+  console.error(err);
+  return "An error occurred while generating the recipe.";
+};
+```
+
+**Purpose:** Captures and handles any errors thrown during the execution of the `try` block.
+
+**Benefit:** Prevents unhandled exceptions from propagating, which could disrupt application flow or crash the interface. Provides a fallback message to maintain user experience.
+
+**Explanation:** If any error occurs during the request or response handling, such as a failed network call, server error, or malformed JSON, the `catch` block is triggered. It performs the following actions:
+  - Logs the error to the console for debugging purposes.
+  - Returns a default fallback string: `"An error occurred while generating the recipe"`.
+
+This ensures that the application degrades gracefully and provides meaningful feedback to the user, even when the AI service is unavailable or malfunctioning.<br><br>
