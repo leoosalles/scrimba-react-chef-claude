@@ -1231,3 +1231,22 @@ catch (err) {
   - Returns a default fallback string: `"An error occurred while generating the recipe"`.
 
 This ensures that the application degrades gracefully and provides meaningful feedback to the user, even when the AI service is unavailable or malfunctioning.<br><br>
+
+---
+
+## 🧪 Technologies Used
+- **Semantic HTML5** — for accessible, well-structured markup that improves readability and usability
+- **Modern CSS3** — with Flexbox and responsive design principles to ensure a clean and adaptable layout
+- **JavaScript (ES6+)** — for asynchronous API communication, including sending POST requests and handling JSON responses within the ai.js module.
+- **React (with ES6+ JavaScript)** — for creating reusable UI components, managing state, and handling user interactions declaratively.
+- **React Markdown + Remark GFM** — to render AI-generated recipes with support for GitHub Flavored Markdown syntax
+- **Fetch API** — for handling asynchronous communication between the frontend and the local backend API
+- **Node.js + Express** — to create the local API endpoint (/api) that processes incoming POST requests and communicates with the AI model to generate recipes
+
+---
+
+## 🙋 About the Author
+
+Developed by **Leonardo Salles de Oliveira**, a technology enthusiast with a passion for design, accessibility, clean code, and inclusive user interfaces.
+
+💼 [LinkedIn](https://www.linkedin.com/in/leonardosalles/)
