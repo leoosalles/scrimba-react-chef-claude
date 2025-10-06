@@ -32,6 +32,9 @@ function Main() {
       });
 
       const data = await response.json();
+
+      console.log("API returne:", data);
+
       setRecipeText(data.text || "No recipe generated.");
       setRecipeShown(true);
     } catch (err) {
@@ -41,6 +44,12 @@ function Main() {
     } finally {
       setLoading(false);
     }
+  };
+
+  function resetApp() {
+    setIngredients([]);
+    setRecipeText("");
+    setRecipeShown(false);
   };
 
   return (
@@ -70,6 +79,8 @@ function Main() {
         <IngredientsList
           ingredients={ingredients}
           fetchRecipe={fetchRecipe}
+          resetApp={resetApp}
+          recipeShown={recipeShown}
         />
       )}
 
