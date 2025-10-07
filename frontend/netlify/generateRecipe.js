@@ -40,5 +40,5 @@ export async function handler(event, context) {
       statusCode: 500,
       body: JSON.stringify({ error: err.message ?? "Internal server error" }),
     };
-  };
+  }
 };
