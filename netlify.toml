@@ -1,5 +1,9 @@
 [build]
-base = "frontend"
-publish = "dist"
-command = "npm run build"
-functions = "netlify/functions"
+  base = "frontend"
+  publish = "dist"
+  command = "npm run build"
+  functions = "frontend/netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@huggingface/inference"]
