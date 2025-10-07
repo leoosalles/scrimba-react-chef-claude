@@ -6,15 +6,25 @@ const SYSTEM_PROMPT = `
 You are an assistant that receives a list of ingredients that a user has and suggests a recipe they could make with some or all of those ingredients. You don't need to use every ingredient they mention in your recipe. The recipe can include additional ingredients, but try not to include too many extras. Format your response in markdown to make it easier to render on a web page.
 `;
 
-export async function handler(event, context) {
+export default async function handler(req, res) {
+  // Habilitar CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
-    const { prompt } = JSON.parse(event.body);
+    const { prompt } = req.body;
 
     if (!prompt || typeof prompt !== "string") {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "prompt (string) is required" }),
-      };
+      return res.status(400).json({ error: "prompt (string) is required" });
     }
 
     const response = await hf.chatCompletion({
@@ -31,14 +41,8 @@ export async function handler(event, context) {
       response?.generated_text ??
       JSON.stringify(response);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ text }),
-    };
+    return res.status(200).json({ text });
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message ?? "Internal server error" }),
-    };
+    return res.status(500).json({ error: err.message ?? "Internal server error" });
   }
-};
+}
