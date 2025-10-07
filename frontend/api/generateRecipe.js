@@ -33,7 +33,7 @@ export default async function handler(req, res) {
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: prompt },
       ],
-      max_tokens: 1024,
+      // max_tokens: 1024,
     });
 
     const text =
