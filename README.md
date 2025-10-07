@@ -62,6 +62,8 @@ This project was developed as a required activity for the **Learn React** module
 ```
 📁 root/
 ┃ 📁 frontend/
+┃ ┣ 📁 api/
+┃ ┃ ┗ 📄 generateRecipe.js
 ┃ ┣ 📁 node_modules/
 ┃ ┣ 📁 src/
 ┃ ┃ ┣ 📂 components/
@@ -88,8 +90,9 @@ This project was developed as a required activity for the **Learn React** module
 
 ## ⚙️ Backend
 
-
 ### `server.js` file
+
+This file handles local AI recipe generation via Express server, serving as the local backend during development. It sets up an Express server that listens for POST requests on the `/api` endpoint, processes incoming prompts from the frontend (`ai.js`), and communicates with the Hugging Face model to generate recipe suggestions, It also includes middleware for CORS, JSON parsing, and request logging, ensuring smooth local testing before deployment to a serverless environment.<br><br>
 
 ```js
 import express from "express";
@@ -1246,6 +1249,206 @@ catch (err) {
 
 This ensures that the application degrades gracefully and provides meaningful feedback to the user, even when the AI service is unavailable or malfunctioning.<br><br>
 
+### ⚙️ API Route
+
+### `generateRecipe.js` file
+
+This file handles AI recipe generation via Hugging Face API. It acts as a serverless backend endpoint for the deployed version on Vercel. It receives POST requests from the frontend (through `ai.js`), sends user's ingredients prompt to the AI model, and returns a formatted recipe response in Markdown.<br><br>
+
+```js
+import { HfInference } from "@huggingface/inference";
+```
+
+**Purpose:** Imports the `HfInference` class from the Hugging Face Inference SDK to enable interaction with hosted machine learning models via API.
+
+**Benefit:** This import provides a streamlined interface for making inference requests to Hugging Face models, allowing me to easily integrate powerful Natural Language Processing capabilities, such as text generation, summarization, or chat completions, into serverless functions or web services without managing model infrastructure.
+
+**Explanation:** The `HfInference` class acts as a high-level client for Hugging Face's hosted inference endpoints. By importing it, the code gains access to methods like `chatCompletion`, which are used to send structured prompts to specific models and receive generated responses. In this context, the class is instantiated with an API key (`process.env.HF_API_KEY`) to authenticate requests. Later in the handler function, this cliente (`hf`) is used to call the `"mistralai/Mixtral-8x7B-Instruct-v0.1"` model, passing a system prompt and user input to generate a recipe suggestion. This abstraction simplifies the process of interacting with Hugging Face's models, handling authentication, request formatting, and response parsing internally.<br><br>
+
+```js
+const hf = new HfInference(process.env.HF_API_KEY);
+```
+
+**Purpose:** Creates an authenticated instance of the Hugging Face Inference client using a secure API key stored in environment variables.
+
+**Benefit:** This approach ensures that all subsequent interactions with Hugging Face models are authorized and consistent, while keeping sensitive credentials out of the source code. It simplifies reuse across multiple requests and enhances security by relying on environment-level configuration.
+
+**Explanation:** The line initializes the `hf` object by invoking the `HfInference` constructor with an API key retrieved from `process.env.HF_API_KEY`. This key must be defined in the hosting environment (e.g., Vercel, AWS Lambda, or another serverless platform) to authenticate requests to Hugging Face's inference endpoints. Once instantiated, the `hf` client provides access to methods like `chatComletion`, which is used later in the handler to generate responses from a specified model. If the API key is missing, misconfigured, or invalid, any attempt to call a model will result in an authentication error, preventing the application from functioning as intended.<br><br>
+
+```js
+const SYSTEM_PROMPT = `
+You are an assistant that receives a list of ingredients that a user has and suggests a recipe they could make with some or all of those ingredients. You don't need to use every ingredient they mention in your recipe. The recipe can include additional ingredients, but try not to include too many extras. Format your response in markdown to make it easier to render on a web page.
+`;
+```
+
+**Purpose:** Defines a structured system-level instruction that sets the model's role, task expectations, and formatting guidelines for generating recipe suggestions.
+
+**Benefit:** By clearly specifying the assistant's behavior and output format, this prompt ensures that every response is aligned with the intended use case, suggesting recipes based on user-provided ingredients, minimizing unnecessary additions, and formatting the output in Markdown for seamless rendering on web interfaces. It also promotes consistency across multiple requests and simplifies future adjustments to the assistant's behavior.
+
+**Explanation:** The `SYSTEM_PROMPT` string acts as a directive for the language model, telling it how to behave and what kind of output to produce. It's passed as a message with the `"system"` role in the `chatCompletion` call, which helps the model understand its function as a recipe-suggesting assistant. The prompt emphasizes flexibility in ingredient usage, discourages excessive additions, and mandates Markdown formatting to enhance readability on web pages. Defining this prompt as a constant variable outside the handler makes it easy to maintain, reuse, or update without modifying the core logic of the function.<br><br>
+
+```js
+export default async function handler(req, res) {..}
+```
+
+**Purpose:** Exports the main asynchronous function that serves as the entry point for handling HTTP requests in a serverless environment, such as Vercel or Next.js API routes.
+
+**Benefit:** This function exposes a single, callable endpoint that Vercel automatically maps to a URL path. The `req` (request) and `res` (response) objects provide access to incoming data and allow the function to send structured responses. This setup enables scalable, event-driven execution without managing traditional server infrastructure.
+
+**Explanation:** In serverless platforms like Vercel, any file inside the `/api` directory that exports a default function with the `(req, res)` signature becomes an accessible HTTP endpoint. This function is invoked whenever a request is made to its corresponding route. The `req` object contains details such as the HTTP method, headers, and body payload, while the `res` object is used to set headers, status codes, and return data to the client. Declaring the function as `async` allows it to handle asynchronous operations, such as calling external APIs or performing model inference, using `await`. This structure is essential for building lightweight, scalable APIs that respond dynamically to user input.<br><br>
+
+```js
+res.setHeader('Access-Control-Allow-Origin', '*');
+```
+
+**Purpose:** Sets the HTTP response header `Access-Control-Allow-Origin` to `*`, enabling Cross-Origin Resource Sharing (CORS) for requests from any domain.
+
+**Benefit:** This permissive configuration allows the API endpoint to be accessed by web applications hosted on any origin, which is especially useful during development, testing, or when deploying public APIs. It eliminates browser restrictions that would otherwise block requests made from different domains.
+
+**Explanation:** CORS is a security feature enforced by browsers to prevent unauthorized cross-origin requests. By setting `Access-Control-Allow-Origin` to `*`, the server signals that it accepts requests from any origin, regardless of where the frontend is hosted. This is convenient for rapid prototyping or open APIs, but it comes with security trade-offs. In production environments, it's recommended to replace `*` with a specific origin (e.g., `https://your-frontend.com`) to prevent unauthorized third-party sites from interacting with the API. This helps protect sensitive data and ensures that only trusted clients can access the endpoint.<br><br>
+
+```js
+res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+```
+
+**Purpose:** Specifies which HTTP methods are permitted when accessing this endpoint, explicitly allowing `POST` requests and `OPTIONS` preflight checks.
+
+**Benefit:** This header informs browsers and CORS middleware that the server accepts `POST` requests and will properly respond to `OPTIONS` requests used during CORS preflight validation. It ensures that clients, especially those running in browsers, can safely and successfully communicate with the API using these methods.
+
+**Explanation:** When a web application sends a cross-origin request using a method other than `GET` or includes custom headers, the browser first performs a **preflight request** using the `OPTIONS` method. This is a security measure to verify that the server permits the intended request. By setting `Access-Control-Allow-Methods` to `'POST, OPTIONS'`, the server explicitly declares support for both the actual request (`POST`) and the preflight check (`OPTIONS`). Without this header, the browser may block the request, resulting in failed API calls. This configuration is essential for enabling cross-origin commnunication in modern web applications.<br><br>
+
+```js
+res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+```
+
+**Purpose:** Sets the `Access-Control-Allow-Headers` response header to explicitly permit the `Content-Type` header in cross-origin HTTP requests.
+
+**Benefit:** This configuration allows browsers to include the `Content-Type: application/json` header when sending data to the server, which is essential for transmitting structured JSON payloads, especially in POST requests from frontend applications.
+
+**Explanation:** When a web application makes cross-origin request with custom headers, like `Content-Type: application/json`, the browser performs a **CORS preflight** using the `OPTIONS` method to verify whether the server accepts those headers. If the server doesn't explicitly allow them via `Access-Control-Allow-Headers`, the browser blocks the request for security reasons. By including `Content-Type` in this header, the server signals that it accepts JSON-formatted  request bodies, enabling smooth communication between frontend and backend across different origins.<br><br>
+
+```js
+if (req.method === 'OPTIONS') {
+  return res.status(200).end();
+}
+```
+
+**Purpose:** Intercepts and immediately responds to incoming `OPTIONS` requests, which are part of the browser's CORS preflight process.
+
+**Benefit:** This early return ensures that the server acknowledges the preflight request without executing any application logic, allowing the browser to proceed with the actual `POST` request if CORS policies are satisfied. It improves performance and avoids unnecessary computation.
+
+**Explanation:** When a web application sends a cross-origin request using methods like `POST` or includes custom headers, the browser first sends an `OPTIONS` request to check whether the server permits such interactions. This is known as a **CORS preflight**. By detecting `req.method === 'OPTIONS'` and returnig `200 OK` response immediately, the server confirms that it supports the requested method and headers. This response satisfies the browser's security check, enabling the actual request to follow. Skipping business logic during this step is crucial, as the preflight is not meant to trigger any data processing or side effects.<br><br>
+
+```js
+if (req.method !== 'POST') {
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+```
+
+**Purpose:** Restricts the endpoint to accept only `POST` requests by rejecting any other HTTP methods with a `405 Method Not Allowed` response.
+
+**Benefit:** This validation ensures that only properly structured requests intended to trigger the AI logic are processed. It protects the server from unintended or unsupported interactions (e.g., `GET`, `PUT`, `DELET`) and provides clear feedback to clients about allowed methods, improving API reliability and predictability.
+
+**Explanation:** In RESTful APIs, each HTTP method has a specific semantic purpose. This endpoint is designed exclusively for `POST` requests, which typically carry a payload (like a user prompt) in the request body. By checking `req.method !== 'POST'`, the server filters out any other methods and responds with a `405` status code, indicating that the method is not supported. This is especially important in serverless environments, where unnecessary execution of unsupported methods could lead to wasted resources or confusing behavior. The explicit error message `{ error: 'Method not allowed'}` helps developers and clients quickly identify and correct their request method.<br><br>
+
+```js
+try {...}
+```
+
+**Purpose:** Initiates a `try` block to wrap potentially error-prone operations, such as request validation and external API calls, so that any runtime exceptions can be caught and handled appropriately.
+
+**Benefit:** This structure ensures that unexpected failures (e.g., network issues, invalid input, authentication errors) do not crash the serverless function or return ambiguous responses. Instead, the application can respond with a clear and controlled HTTP error message, improving reliability and user experience.
+
+**Explanation:** The `try` block encloses the core logic of the handler, including input validation and the call to Hugging Face's `chatCompletion` method. Since this involves asynchronous operations and external dependencies, various errors can occur, such as missing API keys, malformed requests, or service downtime. Without a `try/catch`, these failures would result in unhandled promise rejections or generic server errors. By catching exceptions and returning a structured `500 Internal Server Error` response with a meaningful message, the application remains robust and easier to debug.<br><br>
+
+```js
+const { prompt } = req.body;
+```
+
+**Purpose:** Destructures the `prompt` property from the incoming HTTP request body, which is expected to contain user-provided data in JSON format.
+
+**Benefit:** This approach simplifies access to the user's input (a list of ingredients) by assigning it directly to a local variable. It makes the code cleaner and prepares the data for validation and use in the model inference call.
+
+**Explanation:** When a client sends a `POST` request to this endpoint, it should include a JSON payload like `{ "prompt": "eggs, flour, milk" }`. This line `const { prompt } = req.body;` uses JavaScript destructuring to extract the `prompt` field from that payload. This value is then used to construct the message sent to the Hugging Face model. For this to work correctly, the serverless environment must automatically parse the request body as JSON. If body parsing is not enabled or misconfigured, `req.body` may be undefined or malformed, leading to runtime errors. Ensuring proper middleware or configuration is essential for reliable request handling.<br><br>
+
+```js
+if (!prompt || typeof prompt !== "string") {
+  return res.status(400).json({ error: "prompt (string) is required" });
+}
+```
+
+**Purpose:** Ensures that the incoming request contains a valid `prompt` field and that its values is a string before proceeding with model inference.
+
+**Benefit:** This validation step protects the endpoint from processing malformed or incomplete requests. It prevents unnecessary model calls and provides immediate, clear feedback to the client when the input is missing or incorrectly formatted.
+
+**Explanation:** The line checks two conditions: whether `prompt` is falsy (e.g., `undefined`, `null`, or an empty string), and whether its type is not `"string"`. If either condition is true, the server responds with a `400 Bad Request` status and a descriptive error message. This is crucial because the model expects a well-formed string input to generate a meaningful response. Without this check, invalid data could lead to runtime errors, unpredictable behavior, or wasted compute resources. By enforcing this constraint early, the API maintains robustness and helps clients correct their requests efficiently.<br><br>
+
+```js
+const response = await hf.chatCompletion({
+  model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  messages: [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: prompt },
+  ],
+  max_tokens: 1024,
+});
+```
+
+**Purpose:** Calls the Hugging Face chat-completion API to generate a recipe using the specified model and structured message input.
+
+**Benefit:** Utilizes a powerful language model to produce a recipe that aligns with the system instructions and user-provided ingredients, ensuring relevant, well-formatted output.
+
+**Explanation:** This line triggers the model inference process using Hugging Face's chat-completion endpoint. Here's how each parameter contributes:
+  - `model`: Specifies the exact model to use (`mistralai/Mixtral-8x7B-Instruct-v0.1`), a variant optimized for instruction-following tasks.
+  - `message`: Provides conversational context:
+    - `system` role defines the assistant's behavior and formatting rules.
+    - `user` role contains the actual ingredient list or prompt.
+  - `max_tokens`: Limits the length of the generated response to 1024 tokens, preventing overly long outputs and controlling resource usage.
+  - `response`: Stores the result returned by the model, which includes the generated recipe text.<br><br>
+
+```js
+const text =
+  response?.choices?.[0]?.message?.content ??
+  response?.generated_text ??
+  JSON.stringify(response);
+```
+
+**Purpose:** Safely extracts the generated recipe text from the model's response, using fallback options to ensure robustness.
+
+**Benefit:** Supports multiple response formats and prevents runtime errors if expected properties are missing or undefined, while still returning useful output or debug information.
+
+**Explanation:** This logic accounts for variations in how different models or versions may structure their output:
+  - `response.choices[0].message.content`: The standard format for chat-style models, where the generated text is nested inside a `choices` array.
+  - `response.generated_text`: A fallback used by some models that return plain text directly without chat-style formatting.
+  - `JSON.stringify(response)`: Final fallback that serializes the entire response object into a string, useful for debugging when the expected fields are missing or the structure is infamiliar.<br><br>
+
+```js
+return res.status(200).json({ text });
+```
+
+**Purpose:** Sends a successful HTTP response containing the generated recipe text in a structured JSON format.
+
+**Benefit:** Provides the frontend with a predictable and easily consumable response shape (`{ text: "..." }`) which simplifies rendering the recipe in the UI.
+
+**Explanation:** This line finalizes the request by returning a `200 OK`status along with a JSON object. Here's how it works:
+  - `res.status(200)`: Indicates that the request was successful and the server processed it without errors.
+  - `.json({ text })`: Seds the recipe content back to the client in a standardized format, where `text` holds the generated output.
+  - **Frontend usage**: The client (e.g., a Vercel-hosted site or React app) can access `data.text` from the response and render it directly, using Markdown formatting as instructed in the system prompt.
+
+```js
+catch (err) {
+  return res.status(500).json({ error: err.message ?? "Internal server error" });
+}
+```
+
+**Purpose:** Catches any exceptions thrown during request handling and return a structured HTTP 500 error response.
+
+**Benefit:** Prevents silent failures and ensures the client receives a clear, informative error message when something goes wrong, improving debuggability and user experience.
+
+**Explanation:** This `catch` block handles unexpected errors that may occur during model inference or request processing. It responds with:
+  - `res.status(500)`: Indicates a server-side failure (Internal Server Error).
+  - `.json({ error: err.message ?? "Internal server error" })`: Returns the error message if available, or a generic fallback message.<br><br>
+
 ---
 
 ## 🧪 Technologies Used
@@ -1256,6 +1459,8 @@ This ensures that the application degrades gracefully and provides meaningful fe
 - **React Markdown + Remark GFM** — to render AI-generated recipes with support for GitHub Flavored Markdown syntax
 - **Fetch API** — for handling asynchronous communication between the frontend and the local backend API
 - **Node.js + Express** — to create the local API endpoint (/api) that processes incoming POST requests and communicates with the AI model to generate recipes
+- **Hugging Face Inference API** — for natural language processing and AI-powered recipe generation
+- **Vercel** — for seamless deployment, serverless backend hosting, and continuous integration with GitHub
 
 ---
 
