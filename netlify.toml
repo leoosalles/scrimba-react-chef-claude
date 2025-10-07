@@ -2,4 +2,4 @@
 base = "frontend"
 publish = "dist"
 command = "npm run build"
-functions = "../netlify/functions"
+functions = "netlify/functions"
