@@ -1,6 +1,6 @@
 # 👨‍🍳 Chef Claude: AI-Powered Recipe Generator
 
-**Chef Claude** is a React-based web application that allows users to input a list of ingredients they have on hand and receive AI-generated recipe suggestion. The project integrates a **Node.js + Express backend** with the **Hugging Face Inference API**, leveraging the `Mixtral-8x7B-Instruct` model to generate creative recipe outputs in raw Markdown format.
+**Chef Claude** is a React-based web application that allows users to input a list of ingredients they have on hand and receive AI-generated recipe suggestion. The project integrates a serverless backend with the **Hugging Face Inference API**, leveraging the `Mixtral-8x7B-Instruct` model to generate creative recipe outputs in raw Markdown format.
 
 On the frontend, built with **React and Vite**, users can:
 
@@ -9,9 +9,23 @@ On the frontend, built with **React and Vite**, users can:
 - Request a recipe suggestion once enough ingredients have been provided.
 - Convert raw Markdown recipe text into accessible, styled HTML using `ReactMarkdown` and `remark-gfm`.
 
-The backend handles API requests securely, using environment variables for the Hugging Face API key and applying **CORS** and JSON middleware for safe data handling.
+The backend is implemented as a Vercel serverless function that handles API requests securely, using environment variables for the Hugging Face API key and applying CORS and JSON middleware for safe data handling.
 
 Styling is implemented with **CSS** to ensure a clean, responsive, and user-friendly interface. Accessibility considerations such as `aria-live`, semantic HTML, and keyboard-friendly navigation were included to enhance usability.
+
+**Deployment**
+
+The application is deployed on Vercel, which provides seamless hosting for both the frontend and serverless backend functions. Vercel's platform automatically detects the Vite configuration and builds the React application, while also supporting Node.js serverless functions through its `/api` directory convention.
+
+The deployment process involved:
+  - Creating Vercel's serverless function to handle backend API requests, transitioning from a local development environment to a production-ready serverless architecture.
+  - Configuring the project root directory to `frontend` and setting up environment variables (specifically `HF_API_KEY`) directly in the Vercel dashboard.
+  - Implementing CORS headers in the serverless function to enable secure cross-origin requests.
+  - Utilizing Vercel's automatic deployment pipeline, which triggers builds on every push to the main branch of the connected GitHub repository.
+
+The live application is accessible at the Vercel-generated URL, providing a production-ready environment with automatic HTTPS, global CDN distribution, and instant rollback capabilities. This deployment approach demonstrates modern JAMstack architecture principles, combining static frontend hosting with serverless backend functions for a scalable, cost-effective solution.
+
+**Project Context**
 
 This project was developed as a required activity for the **Learn React** module, part of the **Frontend Development Specialization** course offered by Scrimba. It combines essential frontend skills (state management, conditional rendering, component composition) with backend integration and external API usage, making it a pratical exercise in **full-stack React development**.
 
